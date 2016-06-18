@@ -1,2 +1,3 @@
 # clazstudio.github.io
-GitHub Pages test
+Экспериментирую с GitHub Pages<br>
+Страничка: https://clazstudio.github.io/
