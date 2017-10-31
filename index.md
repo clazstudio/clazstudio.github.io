@@ -6,4 +6,5 @@ This site just an experiment with Github Pages.
 
 At the moment I do addons for the game Garry's mod, so if you already here, you can look at them:
 * [Weapon sets](https://clazstudio.github.io//gmod-lua-weaponsets)
-Or visit my Steam Workshop page)](http://steamcommunity.com/id/CLazStudio/myworkshopfiles/)
+
+Or visit my Steam Workshop page: http://steamcommunity.com/id/CLazStudio/myworkshopfiles/
