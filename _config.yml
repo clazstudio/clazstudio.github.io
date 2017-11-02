@@ -3,7 +3,7 @@ description: GitHub.io page
 google_analytics: 
 show_downloads: false
 theme: jekyll-theme-cayman
-theme_color: "#FF9800"
+theme_color: "#FF5722"
 
 gems:
   - jekyll-mentions
