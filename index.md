@@ -1,6 +1,6 @@
 # Welcome
 Hello, I'm _Lazarev_ "CLazStudio" _Kirill_, another one random guy on GitHub.
-This site just an experiment with Github Pages.
+This site just an experiment with GitHub Pages.
 
 ***
 
