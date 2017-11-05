@@ -5,5 +5,12 @@ show_downloads: false
 theme: jekyll-theme-cayman
 theme_color: "#FF5722"
 
-gems:
+repository: CLazStudio/CLazStudio.github.io
+
+plugins:
   - jekyll-mentions
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
