@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sieve of Eratosthenes</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: stretch;
+            justify-content: flex-start;
+            margin-top: 0.5em;
+
+            resize: horizontal;
+            overflow: auto;
+        }
+
+        .item {
+            width: 6em;
+            height: 2em;
+            text-align: center;
+            background-color: lime;
+        }
+
+        .item.disabled {
+            background-color: gray;
+            text-decoration: line-through;
+        }
+
+        @media print {
+            form {
+                display: none;
+            }
+
+            .item {
+                background: white;
+                font-weight: bold;
+            }
+
+            .item.disabled {
+                font-weight: normal;
+                color: gray;
+            }
+        }
+    </style>
+</head>
+<body>
+    <form action="#" name="main">
+        <input type="number" min="2" name="size" value="100" placeholder="Size">
+        <input type="submit" value="Build">
+        <input type="button" value="Print" onclick="window.print();">
+    </form>
+
+    <div class="container" id="cont"></div>
+<script>
+
+let f = document.forms.main;
+let oldCont = document.getElementById('cont');
+
+f.addEventListener('submit', function(e) {
+    e.preventDefault();
+    let n = Math.max(Math.abs(parseInt(this.size.value) || 100), 2);
+    let cont = oldCont.cloneNode(false);
+    let one = document.createElement('div');
+    one.className = 'item disabled';
+    one.innerHTML = '1';
+    cont.appendChild(one);
+
+    let a = [];
+    for (i = 2; i <= n; i++) {
+        let elem = document.createElement('div');
+        elem.className = 'item';
+        elem.innerHTML = i.toString();
+        
+        if (!a[i]) {
+            for (j = i * i; j <= n; j += i)
+                a[j] = true;
+        } else {
+            elem.classList.add('disabled');
+        }
+
+        cont.appendChild(elem);
+    }
+
+    oldCont.parentElement.replaceChild(cont, oldCont);
+    oldCont = cont;
+});
+
+</script>
+</body>
+</html>
