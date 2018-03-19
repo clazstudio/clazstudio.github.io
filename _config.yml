@@ -10,6 +10,7 @@ repository: CLazStudio/CLazStudio.github.io
 
 plugins:
   - jekyll-mentions
+  - jekyll-sitemap
 
 exclude:
   - README.md
