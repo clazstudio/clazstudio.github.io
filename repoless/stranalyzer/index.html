@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>String Analyzer</title>
+	<meta name="description" content="Get unicode characters list (with codes) from the string. Find out most frequent characters, number of words, characters and sentences.">
+	<meta name="keywords" content="string analyzer, online, text analyzer, characters list, unicode, words count, sentences count, chars count, chars frequency, frequent characters, character code" />
+	<meta name="author" content="CLazStudio">
+	<style>
+		body {
+			font-family: sans-serif;
+			font-size: 16px;
+			margin: 0px;
+		}
+
+		.header {
+			text-align: center;
+			font-size: 2rem;
+			margin: 1rem 1rem 0rem 1rem;
+		}
+
+		.width-limited {
+			display: block;
+			box-sizing: border-box;
+			width: 100%;
+			max-width: 800px;
+			margin: auto;
+		}
+
+		.form	{
+			padding: 1rem;
+		}
+		.form__area {
+			font-family: monospace;
+			box-sizing: border-box;
+			width: 100%;
+			resize: vertical;
+		}
+		.form__out {
+			display: flex;
+			justify-content: center;
+			flex-wrap: wrap;
+			margin: -0.5rem;
+			padding-top: 0.5rem;
+		}
+		.form__table_wrap {
+			display: inline-block;
+			margin: 0.5rem;
+			flex-grow: 1;
+		}
+
+		.form__table {
+    	border-collapse: collapse;
+    	border: 1px solid gray;
+    	width: 100%;
+		}
+		.form__table tr:nth-child(even) {
+			background: #FAFAFA;
+		}
+		.form__table th { background: #EEE; }
+		.form__table th, .form__table td {
+			font-family: monospace;
+			border-right: 1px solid gray;
+			padding: 0rem 0.5rem;
+		}
+
+		.warn {
+			background: #F44336;
+			padding: 1rem;
+			color: white;
+		}
+
+		.footer {
+			text-align: center;
+			margin-bottom: 1rem;
+			opacity: 0.5;
+			transition: opacity ease-in-out 200ms;
+		}
+		.footer:hover { opacity: 1; }
+	</style>
+</head>
+<body>
+	<noscript><div class="warn width-limited">
+		For full functionality of this site it is necessary to enable JavaScript.
+	 	Here are the <a href="https://www.enable-javascript.com/" target="_blank">
+	 	instructions how to enable JavaScript in your web browser</a>.
+	</div></noscript>
+
+	<h1 class="header">String Analyzer</h1>
+
+	<form class="form width-limited" name="main">
+		<textarea class="form__area" name="text" rows="8" placeholder="Enter your string here"></textarea>
+		<br>
+		<input type="submit" name="sb" value="Analyze it!">
+		<input type="button" name="share" value="Get link">
+		<input type="button" name="clear" value="Clear">
+
+		<main class="form__out">
+			<div class="form__table_wrap">
+				<table class="form__table">
+					<caption>Characters list</caption>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Char</th>
+							<th>Code</th>
+						</tr>
+					</thead>
+					<tbody class="form__chars"></tbody>
+				</table>
+			</div>
+
+			<div class="form__table_wrap">
+				<table class="form__table">
+					<caption>Frequency</caption>
+					<thead>
+						<tr>
+							<th>Char</th>
+							<th>Code</th>
+							<th>Freq.</th>
+						</tr>
+					</thead>
+					<tbody class="form__freq"></tbody>
+				</table>
+			</div>
+
+			<div class="form__table_wrap">
+				<table class="form__table">
+					<caption>Stats</caption>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tbody class="form__stats"></tbody>
+				</table>
+			</div>
+		</main>
+
+		<p>More information about characters: <a target="_blank" href="https://unicode.org/Public/UNIDATA/NamesList.txt">unicode.org</a></p>
+	</form>
+
+	<div class="footer">
+		CLazStudio | <a target="_blank" href="https://github.com/clazstudio/clazstudio.github.io/blob/master/repoless/stranalyzer">View code</a>
+	</div>
+</body>
+<script>
+	const form = document.forms.main;
+	const MAX_ROWS = 5000;
+	const SENTENCE_REGEX = /[^\.!\?]+([\.!\?]+|$)[\s]*/g;
+
+	function genStatsRow(key, value) {
+		return `<tr><td>${key}</td><td>${value}</td></tr>`;
+	}
+
+	function getCharCode(char) {
+		return ("000" + char.charCodeAt(0).toString(16).toUpperCase()).slice(-4);
+	}
+
+	form.addEventListener('submit', function(evt) {
+		evt.preventDefault();
+		const charsTbl = this.querySelector('.form__chars');
+		const freqTbl = this.querySelector('.form__freq');
+		const statsTbl = this.querySelector('.form__stats');
+		const str = this.text.value;
+		if (str.length == 0) return false;
+		charsTbl.innerHTML = freqTbl.innerHTML = '';
+
+		let freq = {};
+		let statsInner = genStatsRow('Characters', str.length);
+		let statsValues = {
+			'Not spaces': { regex: /\S/, count: 0 },
+			'Digits': { regex: /\d/, count: 0 },
+			'Alphanumerics': { regex: /\w/, count: 0 },
+			'Spaces': { regex: /\s/, count: 0 }
+		};
+
+		for (let i = 0; i < str.length; i++) {
+			const char = str.charAt(i);
+
+			if (i < MAX_ROWS) {
+				const row = charsTbl.insertRow(-1);
+				row.insertCell(-1).innerHTML = i;
+				row.insertCell(-1).innerHTML = char;
+				row.insertCell(-1).innerHTML = getCharCode(char);
+			}
+
+			freq[char] = (freq[char] || 0) + 1;
+			for (const key in statsValues)
+				if (statsValues[key].regex.test(char))
+					statsValues[key].count++;
+		}
+
+		let uniqueChars = 0;
+		for (const char in freq) {
+			uniqueChars++;
+			if (uniqueChars >= MAX_ROWS) continue;
+			const row = freqTbl.insertRow(-1);
+			row.insertCell(-1).innerHTML = char;
+			row.insertCell(-1).innerHTML = getCharCode(char);
+			row.insertCell(-1).innerHTML = freq[char];
+		}
+
+		statsInner += genStatsRow('Unique', uniqueChars);
+		for (const stat in statsValues)
+			statsInner += genStatsRow(stat, statsValues[stat].count);
+		statsInner += genStatsRow('Words', str.trim().split(/\s+/).length);
+		statsInner += genStatsRow('Sentences', (str.match(SENTENCE_REGEX) || []).length);
+
+		statsTbl.innerHTML = statsInner;
+	});
+
+	form.share.addEventListener('click', function(evt) {
+		window.location.hash = encodeURI(form.text.value);
+	});
+
+	form.clear.addEventListener('click', function(evt) {
+		window.location.hash = '';
+		form.text.value = '';
+	});
+
+	window.addEventListener('load', function(evt) {
+		const hash = window.location.hash;
+		if (hash.length > 1) {
+			form.text.value = decodeURI(hash.substr(1));
+			form.sb.focus();
+		}
+	});
+</script>
+</html>
