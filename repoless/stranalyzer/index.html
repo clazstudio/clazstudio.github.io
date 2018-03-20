@@ -51,9 +51,10 @@
 		}
 
 		.form__table {
-    	border-collapse: collapse;
-    	border: 1px solid gray;
-    	width: 100%;
+			border-collapse: collapse;
+			border: 1px solid gray;
+			text-align: center;
+			width: 100%;
 		}
 		.form__table tr:nth-child(even) {
 			background: #FAFAFA;
@@ -63,6 +64,12 @@
 			font-family: monospace;
 			border-right: 1px solid gray;
 			padding: 0rem 0.5rem;
+		}
+
+		.form__chars td:nth-child(3),
+		.form__freq td:nth-child(2),
+		.form__stats td:nth-child(1) {
+			text-align: right;
 		}
 
 		.warn {
@@ -95,6 +102,14 @@
 		<input type="submit" name="sb" value="Analyze it!">
 		<input type="button" name="share" value="Get link">
 		<input type="button" name="clear" value="Clear">
+		| <select name="base">
+			<option value="2">Binary codes</option>
+			<option value="8">Octal codes</option>
+			<option value="10">Decimal codes</option>
+			<option value="16" selected="selected">Hex codes</option>
+		</select>
+		<input type="checkbox" name="padCode" checked id="main_padCode">
+		<label for="main_padCode">Pad codes?</label>
 
 		<main class="form__out">
 			<div class="form__table_wrap">
@@ -155,8 +170,8 @@
 		return `<tr><td>${key}</td><td>${value}</td></tr>`;
 	}
 
-	function getCharCode(char) {
-		return ("000" + char.charCodeAt(0).toString(16).toUpperCase()).slice(-4);
+	function getCharCode(char, base = 16, pad = '0000') {
+		return (pad + char.charCodeAt(0).toString(base).toUpperCase()).slice(-pad.length);
 	}
 
 	form.addEventListener('submit', function(evt) {
@@ -166,7 +181,11 @@
 		const statsTbl = this.querySelector('.form__stats');
 		const str = this.text.value;
 		if (str.length == 0) return false;
+
 		charsTbl.innerHTML = freqTbl.innerHTML = '';
+		const base = Math.max(2, Math.min(+this.base.value || 16, 16));
+		const pad = (!this.padCode.checked) ? '' :
+					'0'.repeat((1048575).toString(base).length);
 
 		let freq = {};
 		let statsInner = genStatsRow('Characters', str.length);
@@ -179,36 +198,36 @@
 
 		for (let i = 0; i < str.length; i++) {
 			const char = str.charAt(i);
-
 			if (i < MAX_ROWS) {
 				const row = charsTbl.insertRow(-1);
 				row.insertCell(-1).innerHTML = i;
 				row.insertCell(-1).innerHTML = char;
-				row.insertCell(-1).innerHTML = getCharCode(char);
+				row.insertCell(-1).innerHTML = getCharCode(char, base, pad);
 			}
-
 			freq[char] = (freq[char] || 0) + 1;
 			for (const key in statsValues)
 				if (statsValues[key].regex.test(char))
 					statsValues[key].count++;
 		}
 
-		let uniqueChars = 0;
-		for (const char in freq) {
-			uniqueChars++;
-			if (uniqueChars >= MAX_ROWS) continue;
+		let uniqueArr = []; // sorting
+		for (const char in freq)
+			uniqueArr.push([char, freq[char]]);
+		freq = {};
+		uniqueArr.sort((a, b) => b[1] - a[1]);
+		
+		for (let i = 0; i < uniqueArr.length && i < MAX_ROWS; i++) {
 			const row = freqTbl.insertRow(-1);
-			row.insertCell(-1).innerHTML = char;
-			row.insertCell(-1).innerHTML = getCharCode(char);
-			row.insertCell(-1).innerHTML = freq[char];
+			row.insertCell(-1).innerHTML = uniqueArr[i][0]; // char
+			row.insertCell(-1).innerHTML = getCharCode(uniqueArr[i][0], base, pad);
+			row.insertCell(-1).innerHTML = uniqueArr[i][1]; // frequency
 		}
 
-		statsInner += genStatsRow('Unique', uniqueChars);
+		statsInner += genStatsRow('Unique', uniqueArr.length);
 		for (const stat in statsValues)
 			statsInner += genStatsRow(stat, statsValues[stat].count);
 		statsInner += genStatsRow('Words', str.trim().split(/\s+/).length);
 		statsInner += genStatsRow('Sentences', (str.match(SENTENCE_REGEX) || []).length);
-
 		statsTbl.innerHTML = statsInner;
 	});
 
