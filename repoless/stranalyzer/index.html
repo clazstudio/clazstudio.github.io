@@ -208,21 +208,20 @@
 	function getCharCode(char, base = 16, pad = '0000') {
 		const charString = char.codePointAt(0).toString(base).toUpperCase();
 		return charString.length >= pad.length ? charString :
-			     (pad + charString).slice(-pad.length);
+				(pad + charString).slice(-pad.length);
 	}
 
 	function genUnicodeTableLink(char) {
 		return `<a class="info" href="https://unicode-table.com/${getCharCode(char, 16, '')}" target="_blank">i</a>`
 	}
 
-	form.addEventListener('submit', function(evt) {
-		evt.preventDefault();
-		const chars = Array.from(this.text.value);
+	function analyzeString() {
+		const chars = Array.from(form.text.value);
 		if (chars.length == 0) return false;
 
 		charsTbl.innerHTML = freqTbl.innerHTML = '';
-		const base = Math.max(2, Math.min(+this.base.value || 16, 16));
-		const pad = (!this.padCode.checked) ? '' :
+		const base = Math.max(2, Math.min(+form.base.value || 16, 16));
+		const pad = (!form.padCode.checked) ? '' :
 					'0'.repeat((65535).toString(base).length);
 
 		let freq = {};
@@ -264,11 +263,15 @@
 		statsInner += genStatsRow('Unique', uniqueArr.length);
 		for (const stat in statsValues)
 			statsInner += genStatsRow(stat, statsValues[stat].count);
-		statsInner += genStatsRow('Words', this.text.value.trim().split(/\s+/).length);
-		statsInner += genStatsRow('Sentences', (this.text.value.match(SENTENCE_REGEX) || []).length);
+		statsInner += genStatsRow('Words', form.text.value.trim().split(/\s+/).length);
+		statsInner += genStatsRow('Sentences', (form.text.value.match(SENTENCE_REGEX) || []).length);
 		statsTbl.innerHTML = statsInner;
-	});
+	}
 
+	form.addEventListener('submit', function(evt) {
+		evt.preventDefault();
+		analyzeString();
+	});
 	form.share.addEventListener('click', function(evt) {
 		window.location.hash = encodeURI(form.text.value);
 	});
@@ -282,7 +285,7 @@
 		const hash = window.location.hash;
 		if (hash.length > 1) {
 			form.text.value = decodeURI(hash.substr(1));
-			form.sb.focus();
+			analyzeString();
 		}
 	});
 </script>
