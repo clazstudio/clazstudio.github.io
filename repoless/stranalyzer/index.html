@@ -28,6 +28,21 @@
 			margin: auto;
 		}
 
+		.button {
+			display: inline-block;
+			padding: 0.25rem 1rem;
+			margin: 2px;
+			background: #EEE;
+			border: none;
+			cursor: pointer;
+			border-radius: 2px;	
+			box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+			transition: background-color ease-in-out 250ms;
+		}
+		.button:hover { background: #FAFAFA; }
+		.button--primary { background: #03A9F4; color: white; }
+		.button--primary:hover { background: #4FC3F7; }
+
 		.form	{
 			padding: 1rem;
 		}
@@ -36,6 +51,16 @@
 			box-sizing: border-box;
 			width: 100%;
 			resize: vertical;
+		}
+		.form__right {
+			margin-left: auto;
+		}
+		.form__controls {
+			display: flex;
+			flex-direction: row-reverse;
+			align-items: center;
+			flex-wrap: wrap-reverse;
+			margin: -2px;
 		}
 		.form__out {
 			display: flex;
@@ -72,6 +97,13 @@
 			text-align: right;
 		}
 
+		.info {
+			display: inline-block;
+			font-size: 0.75rem;
+			padding-right: 0.25rem;
+			text-decoration: none;
+		}
+
 		.warn {
 			background: #F44336;
 			padding: 1rem;
@@ -98,19 +130,22 @@
 
 	<form class="form width-limited" name="main">
 		<textarea class="form__area" name="text" rows="8" placeholder="Enter your string here"></textarea>
-		<br>
-		<input type="submit" name="sb" value="Analyze it!">
-		<input type="button" name="share" value="Get link">
-		<input type="button" name="clear" value="Clear">
-		| <select name="base">
-			<option value="2">Binary codes</option>
-			<option value="8">Octal codes</option>
-			<option value="10">Decimal codes</option>
-			<option value="16" selected="selected">Hex codes</option>
-		</select>
-		<input type="checkbox" name="padCode" checked id="main_padCode">
-		<label for="main_padCode">Pad codes?</label>
-
+		<div class="form__controls">
+			<input class="button button--primary" type="submit" name="sb" value="Analyze it!">
+			<input class="button " type="button" name="share" value="Get link">
+			<input class="button form__right" type="button" name="clear" value="Clear">
+			
+			<div>
+				<input type="checkbox" name="padCode" checked id="main_padCode">
+				<label for="main_padCode">Pad codes?</label>
+			</div>
+			<select name="base">
+				<option value="2">Binary codes</option>
+				<option value="8">Octal codes</option>
+				<option value="10">Decimal codes</option>
+				<option value="16" selected="selected">Hex codes</option>
+			</select>
+		</div>
 		<main class="form__out">
 			<div class="form__table_wrap">
 				<table class="form__table">
@@ -153,16 +188,16 @@
 				</table>
 			</div>
 		</main>
-
-		<p>More information about characters: <a target="_blank" href="https://unicode.org/Public/UNIDATA/NamesList.txt">unicode.org</a></p>
 	</form>
-
+	
 	<div class="footer">
 		CLazStudio | <a target="_blank" href="https://github.com/clazstudio/clazstudio.github.io/blob/master/repoless/stranalyzer">View code</a>
 	</div>
-</body>
 <script>
 	const form = document.forms.main;
+	const charsTbl = form.querySelector('.form__chars');
+	const freqTbl = form.querySelector('.form__freq');
+	const statsTbl = form.querySelector('.form__stats');
 	const MAX_ROWS = 5000;
 	const SENTENCE_REGEX = /[^\.!\?]+([\.!\?]+|$)[\s]*/g;
 
@@ -171,24 +206,27 @@
 	}
 
 	function getCharCode(char, base = 16, pad = '0000') {
-		return (pad + char.charCodeAt(0).toString(base).toUpperCase()).slice(-pad.length);
+		const charString = char.codePointAt(0).toString(base).toUpperCase();
+		return charString.length >= pad.length ? charString :
+			     (pad + charString).slice(-pad.length);
+	}
+
+	function genUnicodeTableLink(char) {
+		return `<a class="info" href="https://unicode-table.com/${getCharCode(char, 16, '')}" target="_blank">i</a>`
 	}
 
 	form.addEventListener('submit', function(evt) {
 		evt.preventDefault();
-		const charsTbl = this.querySelector('.form__chars');
-		const freqTbl = this.querySelector('.form__freq');
-		const statsTbl = this.querySelector('.form__stats');
-		const str = this.text.value;
-		if (str.length == 0) return false;
+		const chars = Array.from(this.text.value);
+		if (chars.length == 0) return false;
 
 		charsTbl.innerHTML = freqTbl.innerHTML = '';
 		const base = Math.max(2, Math.min(+this.base.value || 16, 16));
 		const pad = (!this.padCode.checked) ? '' :
-					'0'.repeat((1048575).toString(base).length);
+					'0'.repeat((65535).toString(base).length);
 
 		let freq = {};
-		let statsInner = genStatsRow('Characters', str.length);
+		let statsInner = genStatsRow('Characters', chars.length);
 		let statsValues = {
 			'Not spaces': { regex: /\S/, count: 0 },
 			'Digits': { regex: /\d/, count: 0 },
@@ -196,13 +234,13 @@
 			'Spaces': { regex: /\s/, count: 0 }
 		};
 
-		for (let i = 0; i < str.length; i++) {
-			const char = str.charAt(i);
+		for (let i = 0; i < chars.length; i++) {
+			const char = chars[i];
 			if (i < MAX_ROWS) {
 				const row = charsTbl.insertRow(-1);
 				row.insertCell(-1).innerHTML = i;
 				row.insertCell(-1).innerHTML = char;
-				row.insertCell(-1).innerHTML = getCharCode(char, base, pad);
+				row.insertCell(-1).innerHTML = genUnicodeTableLink(char) + getCharCode(char, base, pad);
 			}
 			freq[char] = (freq[char] || 0) + 1;
 			for (const key in statsValues)
@@ -219,15 +257,15 @@
 		for (let i = 0; i < uniqueArr.length && i < MAX_ROWS; i++) {
 			const row = freqTbl.insertRow(-1);
 			row.insertCell(-1).innerHTML = uniqueArr[i][0]; // char
-			row.insertCell(-1).innerHTML = getCharCode(uniqueArr[i][0], base, pad);
+			row.insertCell(-1).innerHTML = genUnicodeTableLink(uniqueArr[i][0]) + getCharCode(uniqueArr[i][0], base, pad);
 			row.insertCell(-1).innerHTML = uniqueArr[i][1]; // frequency
 		}
 
 		statsInner += genStatsRow('Unique', uniqueArr.length);
 		for (const stat in statsValues)
 			statsInner += genStatsRow(stat, statsValues[stat].count);
-		statsInner += genStatsRow('Words', str.trim().split(/\s+/).length);
-		statsInner += genStatsRow('Sentences', (str.match(SENTENCE_REGEX) || []).length);
+		statsInner += genStatsRow('Words', this.text.value.trim().split(/\s+/).length);
+		statsInner += genStatsRow('Sentences', (this.text.value.match(SENTENCE_REGEX) || []).length);
 		statsTbl.innerHTML = statsInner;
 	});
 
@@ -248,4 +286,5 @@
 		}
 	});
 </script>
+</body>
 </html>
