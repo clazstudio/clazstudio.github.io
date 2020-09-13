@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hilbert curve</title>
+  <style>
+    html {
+      font-family: sans-serif;
+      font-size: 16px;
+      color: #222;
+    }
+
+    #canv {
+      margin-top: 1rem;
+      border: dashed 1px gray;
+      padding: 2px;
+      background-color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Hilbert curve</h1>
+  <form id="form">
+    <label>
+      Order:
+      <input type="number" name="order" size="2" min="1" max="12" value="4">
+    </label>
+    <label>
+      Line:
+      <input type="number" name="line" size="3" min="1" value="16">
+    </label>
+    <label>
+      Padding:
+      <input type="number" name="pad" size="3" min="1" value="16">
+    </label>
+    <button type="submit">Draw</button>
+    <span id="sizeOutput"></span>
+  </form>
+  <canvas id="canv"></canvas>
+
+  <script>
+    function submitForm() {
+      const order = parseInt(form.order.value) || 1;
+      const line = parseInt(form.line.value) || 1;
+      const pad = parseInt(form.pad.value) || 2;
+      const ctx = canv.getContext('2d');
+
+      draw(ctx, order, line + pad, line);
+    }
+
+    function handleChange() {
+      const order = parseInt(form.order.value) || 1;
+      const line = parseInt(form.line.value) || 1;
+      const pad = parseInt(form.pad.value) || 1;
+      const side = getSize(order) * (line + pad) + line;
+      if (pad < 1 || line < 1 || order < 1 || order > 16) {
+        return;
+      }
+
+      sizeOutput.innerHTML = side + 'px';
+      canv.width = canv.height = side;
+      location.hash = [order, line, pad].join(',');
+    }
+
+    function getSize(order) {
+      return Math.pow(2, order) - 1;
+    }
+
+    function draw(ctx, order, step, width) {
+      const deg90 = Math.PI / 2;
+      const offset = width / 2;
+      const side = getSize(order)*step + width;
+
+      ctx.clearRect(0, 0, side, side);
+      ctx.translate(side - offset, offset);
+      ctx.rotate(deg90);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      a(order);
+      ctx.lineCap = 'square';
+      ctx.lineWidth = width;
+      ctx.stroke();
+
+      function forward(len) {
+        ctx.translate(0, step);
+        ctx.lineTo(0, 0);
+      }
+
+      function rot(ang) {
+        ctx.rotate(ang);
+      }
+
+      // A -> − B F + A F A + F B −
+      function a(ord) {
+        if (ord === 0) {
+          return;
+        }
+        rot(-deg90);
+        b(ord - 1);
+        forward();
+        rot(deg90);
+        a(ord - 1);
+        forward();
+        a(ord - 1);
+        rot(deg90);
+        forward();
+        b(ord - 1);
+        rot(-deg90);
+      }
+
+      // B -> + A F − B F B − F A +
+      function b(ord, len) {
+        if (ord === 0) {
+          return;
+        }
+        rot(deg90);
+        a(ord - 1);
+        forward(len);
+        rot(-deg90);
+        b(ord - 1);
+        forward(len);
+        b(ord - 1);
+        rot(-deg90);
+        forward(len);
+        a(ord - 1);
+        rot(deg90);
+      }
+    }
+
+    form.order.addEventListener('input', handleChange);
+    form.line.addEventListener('input', handleChange);
+    form.pad.addEventListener('input', handleChange);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      submitForm();
+    });
+    window.addEventListener('load', function () {
+      const vals = location.hash.substr(1).split(',').map(str => parseInt(str));
+      if (vals[0]) {
+        form.order.value = vals[0];
+      }
+      if (vals[1]) {
+        form.line.value = vals[1];
+      }
+      if (vals[2]) {
+        form.pad.value = vals[2];
+      } else if (vals[1]) {
+        form.pad.value = vals[1];
+      }
+
+      handleChange();
+      submitForm();
+    });
+  </script>
+</body>
+
+</html>
