@@ -1,12 +1,12 @@
 title: CLazStudio
-description: GitHub.io page
+description: CLazStudio GitHub.io page
 google_analytics: 
 show_downloads: false
 theme: jekyll-theme-cayman
 theme_color: "#FF5722"
  
 google_verify: L9JqXfHjSoVdD_iVCeqDjsNGnhxv26q4BBvhsWeQ980
-repository: CLazStudio/CLazStudio.github.io
+repository: clazstudio/clazstudio.github.io
 
 plugins:
   - jekyll-mentions
